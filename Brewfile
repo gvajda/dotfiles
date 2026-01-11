@@ -4,11 +4,6 @@
 # Install with: brew bundle --file=~/.local/share/chezmoi/Brewfile
 # This runs automatically via chezmoi's run_once script
 
-# -----------------------------------------------------------------------------
-# Taps (additional repositories)
-# -----------------------------------------------------------------------------
-
-tap "homebrew/bundle"
 
 # -----------------------------------------------------------------------------
 # Core TUI Tools

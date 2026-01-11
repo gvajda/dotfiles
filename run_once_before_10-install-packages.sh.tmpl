@@ -53,7 +53,7 @@ BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
 
 if [[ -f "$BREWFILE" ]]; then
     echo "Installing packages from Brewfile..."
-    brew bundle --file="$BREWFILE" --no-lock
+    brew bundle --file="$BREWFILE"
     echo "Packages installed successfully!"
 else
     echo "Warning: Brewfile not found at $BREWFILE"
@@ -90,6 +90,72 @@ if [[ ! -d "$TPM_DIR" ]]; then
     echo "TPM installed. Plugins will install on first tmux launch."
 else
     echo "TPM already installed."
+fi
+
+# -----------------------------------------------------------------------------
+# Install Oh My Zsh
+# -----------------------------------------------------------------------------
+
+OMZ_DIR="$HOME/.oh-my-zsh"
+
+if [[ ! -d "$OMZ_DIR" ]]; then
+    echo "Installing Oh My Zsh..."
+    # RUNZSH=no prevents oh-my-zsh from launching a new shell
+    # CHSH=no prevents it from changing the default shell (we'll do that separately if needed)
+    RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    echo "Oh My Zsh installed."
+else
+    echo "Oh My Zsh already installed."
+fi
+
+# -----------------------------------------------------------------------------
+# Install Powerlevel10k Theme
+# -----------------------------------------------------------------------------
+
+P10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+
+if [[ ! -d "$P10K_DIR" ]]; then
+    echo "Installing Powerlevel10k theme..."
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
+    echo "Powerlevel10k installed."
+else
+    echo "Powerlevel10k already installed."
+fi
+
+# -----------------------------------------------------------------------------
+# Install Zsh Plugins
+# -----------------------------------------------------------------------------
+
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+
+# zsh-autosuggestions
+AUTOSUGGESTIONS_DIR="$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+if [[ ! -d "$AUTOSUGGESTIONS_DIR" ]]; then
+    echo "Installing zsh-autosuggestions..."
+    git clone https://github.com/zsh-users/zsh-autosuggestions "$AUTOSUGGESTIONS_DIR"
+    echo "zsh-autosuggestions installed."
+else
+    echo "zsh-autosuggestions already installed."
+fi
+
+# zsh-syntax-highlighting
+SYNTAX_HIGHLIGHTING_DIR="$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+if [[ ! -d "$SYNTAX_HIGHLIGHTING_DIR" ]]; then
+    echo "Installing zsh-syntax-highlighting..."
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$SYNTAX_HIGHLIGHTING_DIR"
+    echo "zsh-syntax-highlighting installed."
+else
+    echo "zsh-syntax-highlighting already installed."
+fi
+
+# history-substring-search
+HISTORY_SEARCH_DIR="$ZSH_CUSTOM/plugins/history-substring-search"
+if [[ ! -d "$HISTORY_SEARCH_DIR" ]]; then
+    echo "Installing history-substring-search..."
+    git clone https://github.com/zsh-users/zsh-history-substring-search "$HISTORY_SEARCH_DIR"
+    echo "history-substring-search installed."
+else
+    echo "history-substring-search already installed."
 fi
 
 echo "=============================================="
