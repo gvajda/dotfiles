@@ -1,0 +1,207 @@
+# =============================================================================
+# ZSH Configuration (macOS)
+# =============================================================================
+# Managed by Chezmoi - https://github.com/gvajda/dotfiles
+
+# -----------------------------------------------------------------------------
+# Homebrew
+# -----------------------------------------------------------------------------
+
+{{- if eq .chezmoi.os "darwin" }}
+# macOS Homebrew
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f "/usr/local/bin/brew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+{{- else }}
+# Linux Homebrew
+if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+elif [[ -d "$HOME/.linuxbrew" ]]; then
+    eval "$($HOME/.linuxbrew/bin/brew shellenv)"
+fi
+{{- end }}
+
+# -----------------------------------------------------------------------------
+# Path
+# -----------------------------------------------------------------------------
+
+# Add local bin to path
+export PATH="$HOME/.local/bin:$PATH"
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
+
+# Default editor
+export EDITOR="nvim"
+export VISUAL="nvim"
+
+# Less configuration
+export LESS="-R"
+
+# FZF configuration
+export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!.git/*"'
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+
+# -----------------------------------------------------------------------------
+# Aliases
+# -----------------------------------------------------------------------------
+
+# Editor
+alias v="nvim"
+alias vim="nvim"
+
+# Navigation
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+
+# List files
+alias ls="ls --color=auto"
+alias ll="ls -alF"
+alias la="ls -A"
+alias l="ls -CF"
+
+# Git (lazygit is preferred, but keep basics)
+alias gs="git status"
+alias gd="git diff"
+alias gl="git log --oneline -20"
+alias lg="lazygit"
+
+# TUI apps
+alias y="yazi"
+alias k="k9s"
+
+# Tmux
+alias t="tmux"
+alias ta="tmux attach -t"
+alias tn="tmux new -s"
+alias tl="tmux list-sessions"
+
+# Safety
+alias rm="rm -i"
+alias mv="mv -i"
+alias cp="cp -i"
+
+# -----------------------------------------------------------------------------
+# Dotfiles Management (Chezmoi)
+# -----------------------------------------------------------------------------
+
+dotfiles() {
+    case "$1" in
+        sync)
+            # Sync changes to git
+            chezmoi re-add
+            (
+                cd ~/.local/share/chezmoi || exit
+                git add -A
+                git commit -m "${2:-update dotfiles}"
+                git push
+            )
+            echo "Dotfiles synced to git!"
+            ;;
+        pull)
+            # Pull and apply changes from git
+            chezmoi update
+            echo "Dotfiles updated from git!"
+            ;;
+        edit)
+            # Edit a dotfile via chezmoi
+            if [[ -n "$2" ]]; then
+                chezmoi edit "$2"
+            else
+                echo "Usage: dotfiles edit <file>"
+            fi
+            ;;
+        cd)
+            # Go to chezmoi source directory
+            cd ~/.local/share/chezmoi || return
+            ;;
+        diff)
+            # Show differences
+            chezmoi diff
+            ;;
+        status)
+            # Show git status of dotfiles
+            (cd ~/.local/share/chezmoi && git status)
+            ;;
+        *)
+            # Pass through to chezmoi
+            chezmoi "$@"
+            ;;
+    esac
+}
+
+# -----------------------------------------------------------------------------
+# FZF Integration
+# -----------------------------------------------------------------------------
+
+# Load fzf if installed
+if [[ -f ~/.fzf.zsh ]]; then
+    source ~/.fzf.zsh
+elif command -v fzf &> /dev/null; then
+    eval "$(fzf --zsh)"
+fi
+
+# -----------------------------------------------------------------------------
+# Prompt (simple, fast)
+# -----------------------------------------------------------------------------
+
+# Enable colors
+autoload -U colors && colors
+
+# Git branch in prompt
+git_branch() {
+    git branch 2>/dev/null | grep '^*' | colrm 1 2
+}
+
+setopt PROMPT_SUBST
+PROMPT='%{$fg[blue]%}%~%{$reset_color%} %{$fg[green]%}$(git_branch)%{$reset_color%}
+%{$fg[magenta]%}❯%{$reset_color%} '
+
+# -----------------------------------------------------------------------------
+# History
+# -----------------------------------------------------------------------------
+
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+
+# -----------------------------------------------------------------------------
+# Completion
+# -----------------------------------------------------------------------------
+
+autoload -Uz compinit
+compinit
+
+# Case insensitive completion
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# -----------------------------------------------------------------------------
+# Key Bindings
+# -----------------------------------------------------------------------------
+
+# Use emacs key bindings (more intuitive for most)
+bindkey -e
+
+# Better history search
+bindkey '^[[A' history-search-backward
+bindkey '^[[B' history-search-forward
+
+# -----------------------------------------------------------------------------
+# Yazi Integration (change directory on exit)
+# -----------------------------------------------------------------------------
+
+function yy() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        cd -- "$cwd"
+    fi
+    rm -f -- "$tmp"
+}

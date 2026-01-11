@@ -1,0 +1,97 @@
+#!/bin/bash
+# =============================================================================
+# Package Installation Script
+# =============================================================================
+# This script runs automatically on `chezmoi apply` (only once per machine)
+# It installs Homebrew (if needed) and all packages from Brewfile
+
+set -e
+
+echo "=============================================="
+echo "Installing packages..."
+echo "=============================================="
+
+# -----------------------------------------------------------------------------
+# Install Homebrew if not present
+# -----------------------------------------------------------------------------
+
+if ! command -v brew &> /dev/null; then
+    echo "Homebrew not found. Installing..."
+
+    {{- if eq .chezmoi.os "darwin" }}
+    # macOS installation
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add to path for this session
+    if [[ -f "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+    {{- else }}
+    # Linux installation
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add to path for this session
+    if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    else
+        eval "$($HOME/.linuxbrew/bin/brew shellenv)"
+    fi
+    {{- end }}
+
+    echo "Homebrew installed successfully!"
+else
+    echo "Homebrew already installed."
+fi
+
+# -----------------------------------------------------------------------------
+# Install packages from Brewfile
+# -----------------------------------------------------------------------------
+
+BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
+
+if [[ -f "$BREWFILE" ]]; then
+    echo "Installing packages from Brewfile..."
+    brew bundle --file="$BREWFILE" --no-lock
+    echo "Packages installed successfully!"
+else
+    echo "Warning: Brewfile not found at $BREWFILE"
+fi
+
+# -----------------------------------------------------------------------------
+# Setup fzf key bindings and completion
+# -----------------------------------------------------------------------------
+
+if command -v fzf &> /dev/null; then
+    echo "Setting up fzf..."
+    {{- if eq .chezmoi.os "darwin" }}
+    # macOS
+    if [[ -f "/opt/homebrew/opt/fzf/install" ]]; then
+        /opt/homebrew/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
+    fi
+    {{- else }}
+    # Linux
+    if [[ -f "/home/linuxbrew/.linuxbrew/opt/fzf/install" ]]; then
+        /home/linuxbrew/.linuxbrew/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
+    fi
+    {{- end }}
+fi
+
+# -----------------------------------------------------------------------------
+# Install tmux plugin manager (TPM)
+# -----------------------------------------------------------------------------
+
+TPM_DIR="$HOME/.tmux/plugins/tpm"
+
+if [[ ! -d "$TPM_DIR" ]]; then
+    echo "Installing tmux plugin manager (TPM)..."
+    git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
+    echo "TPM installed. Plugins will install on first tmux launch."
+else
+    echo "TPM already installed."
+fi
+
+echo "=============================================="
+echo "Package installation complete!"
+echo "=============================================="

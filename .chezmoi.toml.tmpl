@@ -1,0 +1,29 @@
+# Chezmoi configuration
+# This file is a template that detects your system and sets variables
+
+[data]
+    name = "Gergely Vajda"
+    email = "gvajda@users.noreply.github.com"
+    github_username = "gvajda"
+    
+{{- if eq .chezmoi.os "darwin" }}
+    os = "macos"
+{{- else if eq .chezmoi.os "linux" }}
+    os = "linux"
+{{- end }}
+
+{{- if eq .chezmoi.arch "arm64" }}
+    arch = "arm64"
+{{- else }}
+    arch = "amd64"
+{{- end }}
+
+[edit]
+    command = "nvim"
+
+[diff]
+    pager = "less -R"
+
+[merge]
+    command = "nvim"
+    args = ["-d", "{{ "{{" }} .Destination {{ "}}" }}", "{{ "{{" }} .Source {{ "}}" }}"]

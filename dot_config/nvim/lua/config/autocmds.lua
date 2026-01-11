@@ -1,0 +1,67 @@
+-- =============================================================================
+-- Auto Commands
+-- =============================================================================
+-- LazyVim sets sensible autocmds. Add your customizations here.
+
+local autocmd = vim.api.nvim_create_autocmd
+local augroup = vim.api.nvim_create_augroup
+
+-- -----------------------------------------------------------------------------
+-- General
+-- -----------------------------------------------------------------------------
+
+-- Highlight yanked text briefly
+autocmd("TextYankPost", {
+  group = augroup("highlight_yank", { clear = true }),
+  callback = function()
+    vim.highlight.on_yank({ higroup = "IncSearch", timeout = 150 })
+  end,
+})
+
+-- Remove trailing whitespace on save
+autocmd("BufWritePre", {
+  group = augroup("trim_whitespace", { clear = true }),
+  pattern = "*",
+  callback = function()
+    local save_cursor = vim.fn.getpos(".")
+    vim.cmd([[%s/\s\+$//e]])
+    vim.fn.setpos(".", save_cursor)
+  end,
+})
+
+-- Return to last edit position when opening files
+autocmd("BufReadPost", {
+  group = augroup("last_position", { clear = true }),
+  callback = function()
+    local mark = vim.api.nvim_buf_get_mark(0, '"')
+    local lcount = vim.api.nvim_buf_line_count(0)
+    if mark[1] > 0 and mark[1] <= lcount then
+      pcall(vim.api.nvim_win_set_cursor, 0, mark)
+    end
+  end,
+})
+
+-- -----------------------------------------------------------------------------
+-- File Type Specific
+-- -----------------------------------------------------------------------------
+
+-- C# specific settings
+autocmd("FileType", {
+  group = augroup("csharp_settings", { clear = true }),
+  pattern = "cs",
+  callback = function()
+    vim.opt_local.tabstop = 4
+    vim.opt_local.shiftwidth = 4
+    vim.opt_local.expandtab = true
+  end,
+})
+
+-- Markdown settings
+autocmd("FileType", {
+  group = augroup("markdown_settings", { clear = true }),
+  pattern = "markdown",
+  callback = function()
+    vim.opt_local.wrap = true
+    vim.opt_local.spell = true
+  end,
+})

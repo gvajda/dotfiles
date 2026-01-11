@@ -1,0 +1,16 @@
+# Ignore files based on OS
+# Files listed here won't be applied on the specified platform
+
+# README and docs shouldn't be applied as dotfiles
+README.md
+LICENSE
+scripts/
+
+# macOS-specific files to ignore on Linux
+{{- if ne .chezmoi.os "darwin" }}
+.DS_Store
+{{- end }}
+
+# Linux-specific files to ignore on macOS  
+{{- if ne .chezmoi.os "linux" }}
+{{- end }}
