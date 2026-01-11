@@ -17,6 +17,9 @@ tap "homebrew/bundle"
 # Editor
 brew "neovim"
 
+# Diff tool
+brew "difftastic"
+
 # Terminal multiplexer
 brew "tmux"
 
